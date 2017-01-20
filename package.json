@@ -1,0 +1,26 @@
+{
+  "name": "array-autosort",
+  "version": "1.0.0",
+  "description": "Automatically sorted arrays",
+  "main": "index.js",
+  "author": "Peter Newnham <pete@blarg.co.uk>",
+  "license": "MIT",
+  "scripts": {
+    "test": "npm run lint && npm test",
+    "lint": "eslint .",
+    "ava": "ava",
+    "preversion": "npm test",
+    "prepublish": "npm test",
+    "postpublish": "git push --follow-tags"
+  },
+  "devDependencies": {
+    "eslint": "^3.13.1",
+    "ava": "^0.17.0"
+  },
+  "ava": {
+    "files": [
+      "test/*.js"
+    ],
+    "verbose": true
+  }
+}
