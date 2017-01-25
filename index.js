@@ -1,93 +1,93 @@
-if (!Array.prototype.autosort) {
-
-  // Default sorters
-  var defaultAscSort = function(a, b) {
-    return a === b ? 0 : (a < b) ? -1 : 1;
+// Default sorters
+var ascSort = function(a, b) {
+  return a === b ? 0 : (a < b) ? -1 : 1;
+};
+var descSort = function(a, b) {
+  return a === b ? 0 : (a < b) ? 1 : -1;
+};
+var reverseSort = function(sorter) {
+  return function(a, b) {
+    return sorter(a, b) * -1;
   };
-
-  var defaultDescSort = function(a, b) {
-    return a === b ? 0 : (a < b) ? 1 : -1;
-  };
-
-  var reverseSort = function(sorter) {
-    return function(a, b) {
-      return sorter(a, b) * -1;
-    };
-  };
-
-  // Store original array prototype methods
-  var originalMutatingMethods = {
-    copyWithin: Array.prototype.copyWithin,
-    push: Array.prototype.push,
-    splice: Array.prototype.splice,
-    unshift: Array.prototype.unshift
-  };
-  var originalReverse = Array.prototype.reverse;
-
-  // Create the autosort method
-  Array.prototype.autosort = function(sorter) {
-
-    var _this = this;
-
-    // Disable autosorting and revert original prototype methods when sorter param is null
-    if (sorter === null) {
-
-      Object.keys(originalMutatingMethods).forEach(function(method) {
-        _this[method] = originalMutatingMethods[method];
-      });
-      this.reverse = originalReverse;
-
+};
+var getSorter = function(sorter) {
+  if (typeof sorter !== 'function') {
+    if (sorter === true) {
+      return descSort;
     }
-    // Enable autosorting
     else {
-
-      // Set the default sorter
-      if (typeof sorter !== 'function') {
-        if (sorter === true) {
-          sorter = defaultDescSort;
-        }
-        else {
-          sorter = defaultAscSort;
-        }
-      }
-      var reverseSorter = reverseSort(sorter);
-
-      // override mutating methods
-      Object.keys(originalMutatingMethods).forEach(function (method) {
-
-        if (_this[method]) {
-
-          _this[method] = function () {
-
-            var response = originalMutatingMethods[method].apply(_this, arguments);
-
-            _this.sort(sorter);
-
-            return response;
-
-          };
-
-        }
-
-      });
-
-      // override reverse to also reverse the sorter
-      this.reverse = function () {
-
-        var nextSorter = reverseSorter;
-        reverseSorter = sorter;
-        sorter = nextSorter;
-
-        return _this.sort(sorter);
-
-      };
-
-      this.sort(sorter);
-
+      return ascSort;
     }
+  }
+  return sorter;
+};
 
-    return this;
+module.exports = function(target, sorter) {
 
+  // ensure the target is an array
+  if (!Array.isArray(target)) {
+    throw new TypeError('autosort must be passed an array');
   }
 
-}
+  var autoSortOnSet = true;
+
+  // cache the sorters to use
+  var currentSorter = getSorter(sorter);
+  var reverseSorter = reverseSort(currentSorter);
+
+  var proxy = Proxy.revocable(target, {
+    set: function(target, index, value) {
+      try {
+        target[index] = value;
+        // only autosort if required
+        // this allows mutating methods to opt out of sorting until they have completed
+        if (autoSortOnSet) {
+          target.sort(currentSorter);
+        }
+        return true;
+      }
+      catch(e) {
+        return false;
+      }
+    },
+    get: function(target, key) {
+      var original = target[key];
+      // mutating methods should not autosort until after they have completed to prevent
+      // side effects and increase efficiency
+      if (['copyWithin', 'push', 'splice', 'unshift'].indexOf(key) >= 0) {
+        return function() {
+          autoSortOnSet = false;
+          var response = original.apply(this, arguments);
+          autoSortOnSet = true;
+          target.sort(currentSorter);
+          return response;
+        };
+      }
+      // reversing the array should also reverse the sorter
+      else if (key === 'reverse') {
+        return function() {
+          var nextSorter = reverseSorter;
+          reverseSorter = currentSorter;
+          currentSorter = nextSorter;
+          return target.sort(currentSorter);
+        }
+      }
+      else {
+        return original;
+      }
+
+    }
+  });
+
+  // autosort by default
+  target.sort(currentSorter);
+
+  // cancel autosort
+  proxy.proxy.cancelAutosort = function() {
+    proxy.revoke();
+    return target;
+  };
+
+  return proxy.proxy;
+
+};
