@@ -3,14 +3,9 @@ Automatically sorted arrays.
 
 Automatic ascending, descending or custom sorting of arrays. After enabling autosort, adding new entries to the array will automatically sort the array.
 
-**Note**: the Array prototype is modified to enable the autosorting functionality. If you do not want to do this then this package is not for you.
-The following methods are mutated:
+Supported Environments: Chrome, Firefox, Edge and NodeJS 6+
 
-* Array.prototype.copyWithin
-* Array.prototype.push
-* Array.prototype.splice
-* Array.prototype.unshift
-* Array.prototype.reverse
+**Note**: this feature relies on the [Proxy](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Proxy) object so is not suitable for any environment that does not have it implemented.
 
 
 ## Installation
@@ -25,27 +20,53 @@ yarn add array-autosort
 
 ## Usage
 
-Importing the package will automatically add the autosort array prototype method and all subsequently created arrays can use it:
 ```javascript
 // common js
-require('array-autosort');
+const autosort = require('array-autosort');
+const arr = autosort([1,2,3]);
 
 // es6 modules
-import 'array-autosort';
+import autosort from 'array-autosort';
+const arr = autosort([1,2,3]);
 ```
+
+## API
+
+### autosort(arr, [sorter])
+
+Returns an array.
+
+#### arr
+
+Type: `Array`
+
+Array to autosort.
+
+#### sorter
+
+Type: `Function` or `Boolean`
+
+If `undefined` or `false` the sorter will be an ascending sort (default behaviour)
+If `true` the sorter will be a descending sort
+If `Function` it will be used as a custom sort function
+
+### arr.cancelAutosort()
+
+Stops autosorting the array and returns it.
+
 
 ## Examples
 ```javascript
 // sort ascending
-var arr = [10,5,1].autosort(); // [1,5,10]
+var arr = autosort([10,5,1]); // [1,5,10]
 arr.push(6); // [1,5,6,10]
 arr.unshift(3); // [1,3,5,6,10]
 
 // false is also an alias for ascending sort
-[3,2,1].autosort(false); // [1,2,3]
+autosort([3,2,1], false); // [1,2,3]
 
 // sort descending
-var arr = [1,2,3].autosort(true); // [3,2,1]
+var arr = autosort([1,2,3], true); // [3,2,1]
 arr.push(10); // [10,3,2,1]
 
 // custom sorter
@@ -54,17 +75,17 @@ var sorter = function(a,b) {
   var bId = b.id;
   return aId === bId ? 0 : (aId < bId ? -1 : 1);
 }
-var arr = [{id:10},{id:4},{id:20}].autosort(sorter); // [{id:4},{id:10},{id:20}]
+var arr = autosort([{id:10},{id:4},{id:20}], sorter); // [{id:4},{id:10},{id:20}]
 arr.push({id:13}); // [{id:4},{id:10},{id:13},{id:20}]
 
 // array.reverse will also reverse the autosorter
-var arr = [10,5,1].autosort(); // [1,5,10]
+var arr = autosort([10,5,1]); // [1,5,10]
 arr.push(3); // [1,3,5,10]
 arr.reverse(); // [10,5,3,1]
 arr.push(8); // [10,8,5,3,1]
 
-// disable autosort
-var arr = [10,5,1].autosort(); // [1,5,10]
-arr.autosort(null);
+// cancel autosort
+var arr = autosort([10,5,1]); // [1,5,10]
+arr = arr.cancelAutosort();
 arr.push(3); // [1,5,10,3]
 ```

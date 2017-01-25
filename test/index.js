@@ -1,38 +1,39 @@
 const test = require('ava');
-require('../index');
+var autosort = require('../index');
 
-test('it should return the sorted array instance', t => {
-  const actual = [1,2,3];
-  const expected = actual.autosort();
-  t.is(expected, actual);
+test('is should throw an error if the target is not an array', t => {
+  const error = t.throws(() => {
+    autosort({});
+  }, TypeError);
+  t.is(error.message, 'autosort must be passed an array');
 });
 
 test('it should sort ascending when no parameter is provided', t => {
-  const actual = [3,2,1].autosort();
+  const actual = autosort([3,2,1]);
   const expected = [1,2,3];
   t.deepEqual(expected, actual);
 });
 
 test('it should sort ascending when the sorter parameter is false', t => {
-  const actual = [3,2,1].autosort(false);
+  const actual = autosort([3,2,1], false);
   const expected = [1,2,3];
   t.deepEqual(expected, actual);
 });
 
 test('it should sort descending when the sorter parameter is true', t => {
-  const actual = [1,2,3].autosort(true);
+  const actual = autosort([1,2,3], true);
   const expected = [3,2,1];
   t.deepEqual(expected, actual);
 });
 
 test('it should use a custom sort function when the sorter parameter is a function', t => {
   const sorter = (a, b) => a.id === b.id ? 0 : a.id < b.id ? -1 : 1;
-  const actual = [
+  const actual = autosort([
     { id:1 },
     { id:20 },
     { id:8 },
     { id:15 },
-  ].autosort(sorter);
+  ], sorter);
   const expected = [
     { id:1 },
     { id:8 },
@@ -42,16 +43,34 @@ test('it should use a custom sort function when the sorter parameter is a functi
   t.deepEqual(expected, actual);
 });
 
-test('it should reset autosorting when the sorter parameter is null', t => {
-  const actual = [10,5,1].autosort();
+test('it should stop autosorting when the cancelAutosort method is called', t => {
+  const actual = autosort([10,5,1]);
   t.deepEqual([1,5,10], actual);
-  actual.autosort(null);
-  actual.push(3);
-  t.deepEqual([1,5,10,3], actual);
+  const cancelled = actual.cancelAutosort();
+  cancelled.push(3);
+  t.deepEqual([1,5,10,3], cancelled);
+});
+
+test('it should output a standard JSON encoded array when autosorted', t => {
+  const actual = autosort([10,5,1]);
+  t.is('[1,5,10]', JSON.stringify(actual));
+});
+
+test('it should be considered an array when tested for type', t => {
+  const actual = autosort([3,2,1]);
+  t.is(true, Array.isArray(actual));
+  t.is('[object Array]', toString.call(actual));
+});
+
+test('it should autosort when array index is set directly', t => {
+  const actual = autosort([10,5,1]);
+  t.deepEqual([1,5,10], actual);
+  actual[1] = 20;
+  t.deepEqual([1,10,20], actual);
 });
 
 test('Array.prototype.reverse should also reverse the sorter function', t => {
-  const actual = [1,10,5].autosort();
+  const actual = autosort([1,10,5]);
   t.deepEqual([1,5,10], actual);
   actual.reverse();
   actual.push(6);
@@ -63,7 +82,7 @@ test('Array.prototype.reverse should also reverse the sorter function', t => {
 });
 
 test('Array.prototype.copyWithin should autosort', t => {
-  const actual = [1,2,3,4,5,6].autosort();
+  const actual = autosort([1,2,3,4,5,6]);
   const expected = [1,1,2,2,3,3];
   const actualResponse = actual.copyWithin(3);
   const expectedResonse = actual;
@@ -72,7 +91,7 @@ test('Array.prototype.copyWithin should autosort', t => {
 });
 
 test('Array.prototype.push should autosort', t => {
-  const actual = [1,5,10].autosort();
+  const actual = autosort([1,5,10]);
   const expected = [1,5,6,10];
   const actualResponse = actual.push(6);
   const expectedResponse = 4;
@@ -81,7 +100,7 @@ test('Array.prototype.push should autosort', t => {
 });
 
 test('Array.prototype.splice should autosort', t => {
-  const actual = [1,2,3,4,5,6].autosort();
+  const actual = autosort([1,2,3,4,5,6]);
   const expected = [1,1,2,2,3,3];
   const actualResponse = actual.splice(3, 3, 1, 2, 3);
   const expectedResponse = [4,5,6];
@@ -90,7 +109,7 @@ test('Array.prototype.splice should autosort', t => {
 });
 
 test('Array.prototype.unshift should autosort', t => {
-  const actual = [1,2,3].autosort();
+  const actual = autosort([1,2,3]);
   const expected = [1,2,3,4];
   const actualResponse = actual.unshift(4);
   const expectedResponse = 4;
