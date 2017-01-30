@@ -1,6 +1,6 @@
 {
   "name": "array-autosort",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Automatically sorted arrays",
   "main": "index.js",
   "author": "Peter Newnham <pete@blarg.co.uk>",
