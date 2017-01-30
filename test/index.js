@@ -1,11 +1,17 @@
 const test = require('ava');
 var autosort = require('../index');
 
-test('is should throw an error if the target is not an array', t => {
+test('it should throw an error if the target is not an array', t => {
   const error = t.throws(() => {
     autosort({});
   }, TypeError);
   t.is(error.message, 'autosort must be passed an array');
+});
+
+test('it should default to an empty array when no arguments are passed', t => {
+  const actual = autosort();
+  const expected = [];
+  t.deepEqual(expected, actual);
 });
 
 test('it should sort ascending when no parameter is provided', t => {
