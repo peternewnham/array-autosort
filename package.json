@@ -5,6 +5,15 @@
   "main": "index.js",
   "author": "Peter Newnham <pete@blarg.co.uk>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wrakky/array-autosort.git"
+  },
+  "keywords": [
+    "array",
+    "sort",
+    "autosort"
+  ],
   "scripts": {
     "test": "npm run lint && npm run ava",
     "lint": "eslint .",

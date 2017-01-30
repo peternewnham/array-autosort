@@ -24,6 +24,8 @@ var getSorter = function(sorter) {
 
 module.exports = function(target, sorter) {
 
+  target = target || [];
+
   // ensure the target is an array
   if (!Array.isArray(target)) {
     throw new TypeError('autosort must be passed an array');

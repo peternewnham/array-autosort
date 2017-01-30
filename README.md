@@ -32,7 +32,7 @@ const arr = autosort([1,2,3]);
 
 ## API
 
-### autosort(arr, [sorter])
+### autosort([arr, sorter])
 
 Returns an array.
 
@@ -40,7 +40,7 @@ Returns an array.
 
 Type: `Array`
 
-Array to autosort.
+Array to autosort. If not provied, an empty array will be used by default.
 
 #### sorter
 
